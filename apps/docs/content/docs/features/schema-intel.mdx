@@ -17,18 +17,18 @@ Diagnostics run automatically when you open the tab for the first time. You can 
 
 ## Database Support Matrix
 
-Schema Intel tailors its diagnostic suite to the active database engine. Checks that rely on database-specific statistics (such as PostgreSQL's `pg_stat_user_tables` or `pg_stat_user_indexes`) are enabled only for compatible engines.
+Schema Intel tailors its diagnostic suite to the active database engine. Checks that rely on database-specific statistics (such as PostgreSQL's `pg_stat_user_tables` or `pg_stat_user_indexes`) are enabled only for compatible engines. ClickHouse connections skip every check.
 
-| Check | Severity | PostgreSQL | MySQL | SQL Server | SQLite |
-| ----- | -------- | :--------: | :---: | :--------: | :----: |
-| `tables_without_pk` | `warning` | Supported | Supported | Supported | Supported |
-| `missing_fk_indexes` | `warning` | Supported | Supported | Supported | Supported |
-| `duplicate_indexes` | `warning` | Supported | Supported | Unsupported | Supported |
-| `unused_indexes` | `info` | Supported | Supported | Unsupported | Unsupported |
-| `invalid_indexes` | `critical` | Supported | Unsupported | Unsupported | Unsupported |
-| `bloated_tables` | `info` | Supported | Unsupported | Unsupported | Unsupported |
-| `never_vacuumed` | `info` | Supported | Unsupported | Unsupported | Unsupported |
-| `nullable_fks` | `info` | Supported | Supported | Supported | Supported |
+| Check | Severity | PostgreSQL | MySQL | SQL Server | SQLite | ClickHouse |
+| ----- | -------- | :--------: | :---: | :--------: | :----: | :--------: |
+| `tables_without_pk` | `warning` | Supported | Supported | Supported | Supported | Unsupported |
+| `missing_fk_indexes` | `warning` | Supported | Supported | Supported | Supported | Unsupported |
+| `duplicate_indexes` | `warning` | Supported | Supported | Unsupported | Supported | Unsupported |
+| `unused_indexes` | `info` | Supported | Supported | Unsupported | Unsupported | Unsupported |
+| `invalid_indexes` | `critical` | Supported | Unsupported | Unsupported | Unsupported | Unsupported |
+| `bloated_tables` | `info` | Supported | Unsupported | Unsupported | Unsupported | Unsupported |
+| `never_vacuumed` | `info` | Supported | Unsupported | Unsupported | Unsupported | Unsupported |
+| `nullable_fks` | `info` | Supported | Supported | Supported | Supported | Unsupported |
 
 ## Diagnostic Checks
 
@@ -90,7 +90,7 @@ Schema Intel tailors its diagnostic suite to the active database engine. Checks 
 ### Bloated Tables (`bloated_tables`)
 
 - **Severity**: `info`
-- **What it detects**: Tables with more than 1,000 dead rows where dead tuples make up over 20% of total table storage.
+- **What it detects**: Tables with more than 1,000 dead rows where dead rows make up over 20% of the table's rows.
 - **What the issue means**: Under PostgreSQL's multi-version concurrency control (MVCC), updated and deleted rows remain on disk as dead tuples until autovacuum reclaims them. When autovacuum cannot keep pace with high write workloads, tables accumulate dead-tuple bloat. This forces sequential scans to read unnecessary disk pages, wastes memory in shared buffers, and degrades query throughput.
 - **Database support**:
   - **PostgreSQL**: Supported — evaluates live versus dead tuple counts from `pg_stat_user_tables`.
@@ -145,10 +145,10 @@ When Schema Intel surfaces an actionable finding, it provides contextual guidanc
 You can run the same Schema Intel diagnostics directly from your terminal or integrate them into continuous integration (CI) pipelines using the data-peek CLI:
 
 ```bash
-npx data-peek doctor
+DATABASE_URL=postgres://user:pass@localhost:5432/app npx @data-peek/cli doctor
 ```
 
-Or specify the database connection string explicitly:
+Or pass the connection string as an argument:
 
 ```bash
 npx @data-peek/cli doctor postgres://user:pass@localhost:5432/app
@@ -161,6 +161,6 @@ For options, exit codes, and CI pipeline setup, see the [CLI reference](/docs/re
 ## Related
 
 - [Health Monitor](/docs/features/health-monitor) — live view of active queries, table sizes, cache hit ratios, and locks
-- [CLI Reference](/docs/reference/cli) — run schema checks from your terminal with `npx data-peek doctor`
+- [CLI Reference](/docs/reference/cli) — run schema checks from your terminal with `npx @data-peek/cli doctor`
 - [Query Plans](/docs/features/query-plans) — analyze execution plans with `EXPLAIN ANALYZE`
 - [Table Designer](/docs/features/table-designer) — visual editor for altering columns, indexes, and constraints
